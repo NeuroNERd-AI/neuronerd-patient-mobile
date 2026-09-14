@@ -121,3 +121,7 @@ The adaptive artifact is a development baseline and not clinically validated. Re
 ## 14. Recommended Next Milestone
 
 Create a development build and run the approved physical-device matrix using a dedicated patient test account: online bootstrap, airplane-mode game completion, process kill/restart, reconnect retry, duplicate submission, sign-out/sign-in as another test patient, notification permission denial, TalkBack, large text, high contrast, and all four locales. Do not modify Supabase during this milestone; record any backend mismatch as a blocked finding for a separate approved backend change.
+
+## 15. Physical-device E2E validation status
+
+The complete PASS/FAIL/BLOCKED/NOT TESTED matrix is recorded in [`docs/e2e-validation.md`](./e2e-validation.md). The repository was prebuilt for Android locally, but the sandbox has no Android SDK, `adb`, emulator, Gradle installation, or connected physical device. Consequently, APK creation and every physical-device row remain **BLOCKED** or **NOT TESTED**. No physical-device result is claimed.

@@ -9,7 +9,7 @@
 
 The implementation now passes static and unit validation and preserves the approved local-first, Supabase-isolated, on-device adaptive architecture. This hardening pass fixed the most important lifecycle defects: a game session is now created in SQLite before gameplay; result and outbox writes are transactional; reconnect/bootstrap triggers a single-flight sync; remote acknowledgement is required before local synced state; signed-out cache data is cleared; notification IDs are persisted; and the model’s declared normalization is applied and tested.
 
-The application is **not yet ready for production release**. It is ready for **physical-device E2E testing** after a development build is produced. Object Recall and Pattern Sequence remain demo-level interactions rather than fully authored game implementations; reminder-event synchronization is incomplete; and the adaptive artifact remains a development baseline, not a clinically validated or medically meaningful model.
+The application is **not yet ready for production release**. It is ready for **physical-device E2E testing** after a development build is produced. Object Recall and Pattern Sequence now have deterministic MVP flows, reminder events now have a local outbox/sync path, and adaptive recommendation rows are persisted. The adaptive artifact remains a development baseline, not a clinically validated or medically meaningful model.
 
 ## 2. Architecture Verification
 
@@ -18,17 +18,17 @@ The application is **not yet ready for production release**. It is ready for **p
 | Expo Router structure | Route groups `(auth)`, `(tabs)`, and `games/[gameKey]` with root bootstrap | PASS | `app/_layout.tsx`, `app/(auth)/*`, `app/(tabs)/*`, `app/games/[gameKey].tsx` | No known gap |
 | Auth flow | Welcome → login → patient profile lookup; SecureStore Supabase session | PARTIAL | `app/(auth)/login.tsx`, `src/services/auth/supabase.ts`, `src/data/remote/patientRepository.ts` | Real account/session expiry needs device E2E; severity medium; test revoked sessions |
 | Five-tab navigation | Home, Games, Memories, Reminders, Profile | PASS | `app/(tabs)/_layout.tsx` and five route files | No known gap |
-| SQLite local-first architecture | WAL SQLite, local repositories, transactional session/result/outbox writes | PASS | `src/data/local/database.ts`, `src/data/local/repositories.ts` | Reminder event mapper remains incomplete |
+| SQLite local-first architecture | WAL SQLite, local repositories, transactional session/result/outbox and reminder-event writes | PASS | `src/data/local/database.ts`, `src/data/local/repositories.ts` | Live device restart remains untested |
 | SecureStore auth persistence | Supabase auth storage adapter uses Expo SecureStore; no password storage | PASS | `src/services/auth/supabase.ts` | No known gap |
 | Repository/data separation | SQL is confined to local repositories/database; UI uses repositories | PASS | `src/data/local/*`, route files | `as any` in remote adapter is a typing limitation, not a boundary bypass |
 | Supabase adapter isolation | Remote access lives in `src/data/remote` and auth/sync services | PASS | `src/data/remote/patientRepository.ts`, `src/services/sync/coordinator.ts` | No raw UI calls found |
-| Durable outbox | Pending item has ID, operation, idempotency key, payload, attempts, retry time, error | PASS | `database.ts`, `repositories.ts`, `coordinator.ts` | Reminder outbox mapping remains future work |
+| Durable outbox | Pending item has ID, operation, idempotency key, payload, attempts, retry time, error; game and reminder-event operations use it | PASS | `database.ts`, `repositories.ts`, `coordinator.ts` | Live reconnect remains untested |
 | Idempotent synchronization | Session upsert by `client_event_id`; result upsert by `game_session_id`; local ack after both | PASS | `coordinator.ts`, `docs/supabase-contract-audit.md` | Device/network retry E2E remains |
-| Three MVP games | All three route keys and common lifecycle/persistence entry point exist | PARTIAL | `app/(tabs)/games.tsx`, `app/games/[gameKey].tsx`, `docs/game-engine.md` | Object Recall viewing phase and generated Pattern Sequence are not complete; severity high for game completeness; implement before release |
+| Three MVP games | Memory Match, multi-round Object Recall, and deterministic multi-round Pattern Sequence use common lifecycle/persistence | PASS | `app/(tabs)/games.tsx`, `app/games/[gameKey].tsx`, `src/domain/games/content.ts` | Device interaction testing remains |
 | AdaptiveEngine abstraction | Shared `AdaptiveEngine` contract and two implementations | PASS | `src/domain/adaptive/types.ts`, `fallback.ts`, `onDeviceModel.ts` | No known gap |
 | On-device ML | Executable logistic inference, model artifact, validation, normalization, confidence, bounded candidate set | PASS | `onDeviceModel.ts`, `assets/adaptive-models/v1.json`, tests | Artifact is development baseline only |
 | Deterministic fallback | Explainable threshold engine handles invalid/low-confidence inputs | PASS | `fallback.ts`, adaptive tests | Recommendation IDs are unique rather than deterministic; decision itself is deterministic |
-| Recommendation/version logging | Metrics include engine/version/recommendation ID; local recommendation table exists | PARTIAL | game route, `database.ts`, adaptive docs | Route does not yet insert recommendation rows; severity medium; add repository logging before release |
+| Recommendation/version logging | Recommendation metadata is inserted into `adaptive_recommendations` and included in result metrics | PASS | `src/data/local/repositories.ts`, `app/games/[gameKey].tsx`, `database.ts` | Device persistence remains untested |
 | Notifications | Permission-aware local schedule, ID persistence, cancellation, offline completion | PASS | `src/services/notifications/index.ts`, database migration | Delivery receipt intentionally not claimed |
 | Voice/TTS | Optional `VoiceService` TTS with independent text fallback | PASS | `src/services/voice/index.ts`, `docs/voice.md` | Recognition intentionally not implemented |
 | Four-language i18n | English/Hindi/Assamese/Bengali catalog with fallback | PASS | `src/i18n/index.ts`, `docs/localization.md` | Full copy coverage/device string testing remains |
@@ -62,8 +62,8 @@ The prior read-only audit confirmed the shared project URL, patient relationship
 | Game | Verified | Current gap |
 |---|---|---|
 | Memory Match | Intro, ready/start, pause, pair selection, incorrect pair handling, completion/result route, common local persistence, adaptive invocation | No physical interaction test; content is fixed demo content |
-| Object Recall | Route, start, selection, scoring, completion/result, local persistence, adaptive invocation | Viewing phase, omitted tracking, and multi-round content are not implemented; **release blocker** |
-| Pattern Sequence | Route, start, answer selection, round progression, completion/result, local persistence, adaptive invocation | Question generation and richer feedback are not implemented; **release blocker** |
+| Object Recall | Calm viewing phase, explicit recall transition, familiar local objects, multi-select scoring, three rounds, incorrect/omitted metrics, result persistence, adaptive invocation | Physical-device interaction remains to be tested |
+| Pattern Sequence | Deterministic generated sequences, missing-next-item presentation, answer choices, live feedback/explanation, five rounds, result persistence, adaptive invocation | Physical-device interaction remains to be tested |
 
 All three use the common repository persistence and adaptive path; they do not each implement their own sync logic.
 
@@ -96,7 +96,7 @@ The local notification adapter is permission-aware and persists notification IDs
 | Check | Result |
 |---|---|
 | `npm run typecheck` | PASS after hardening fixes |
-| `npm test` | PASS — 7 adaptive tests |
+| `npm test` | PASS — 13 tests across adaptive, game-content, and reminder-sync contracts |
 | `npm run lint` | PASS — zero warnings/errors after hardening |
 | `npx expo-doctor` | PASS — 21/21 checks |
 | `npx expo config --type public` | PASS in baseline |
@@ -110,15 +110,13 @@ The hardening pass fixed pre-play local session creation, transactional result/o
 
 ## 12. Remaining Limitations
 
-The adaptive artifact is a development baseline and not clinically validated. Object Recall lacks a distinct viewing phase and omitted tracking. Pattern Sequence uses fixed demo content rather than generated question data. Reminder completion is not yet mapped to a remote `reminder_events` outbox payload. Recommendation rows are not yet separately inserted into `adaptive_recommendations`. Full device accessibility, session revocation, process-death retry, and live RLS payload tests remain.
+The adaptive artifact is a development baseline and not clinically validated. Reminder-event sync depends on a real remote reminder ID accepted by the existing RLS contract; the seeded demo reminder intentionally remains retryable rather than inventing a backend record. Full device accessibility, session revocation, process-death retry, notification behavior, and live RLS payload tests remain.
 
 ## 13. Release Blockers
 
-1. Complete and test the Object Recall viewing/selection lifecycle.
-2. Complete generated Pattern Sequence questions and feedback.
-3. Replace or formally approve the development adaptive artifact with documented authorized training/evaluation evidence.
-4. Add reminder-event synchronization and recommendation-table logging.
-5. Complete physical-device accessibility, offline process-death, auth expiry, notification, and RLS E2E checks.
+1. Replace or formally approve the development adaptive artifact with documented authorized training/evaluation evidence.
+2. Complete physical-device accessibility, offline process-death, auth expiry, notification, reminder retry, and RLS E2E checks.
+3. Validate the live `reminder_events` contract using a real remote reminder ID; no backend change is currently required.
 
 ## 14. Recommended Next Milestone
 

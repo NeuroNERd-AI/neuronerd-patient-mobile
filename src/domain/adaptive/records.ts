@@ -1,0 +1,3 @@
+import type { GameResult } from '../../types';
+import type { DifficultyRecommendation } from './types';
+export function adaptiveRecommendationRow(gameKey: GameResult['gameKey'], currentDifficulty: GameResult['difficulty'], recommendation: DifficultyRecommendation, createdAt = new Date().toISOString()) { return { id: recommendation.recommendationId, gameKey, engine: recommendation.engine, engineVersion: recommendation.engineVersion, featureSchemaVersion: recommendation.featureSchemaVersion, currentDifficulty, recommendedDifficulty: recommendation.difficulty, predictedProbability: recommendation.predictedSuccessProbability ?? null, confidence: recommendation.confidence, fallbackReason: recommendation.fallbackReason ?? null, createdAt }; }

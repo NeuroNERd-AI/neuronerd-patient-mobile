@@ -1,0 +1,3 @@
+export type ReminderEventPayload = { clientEventId: string; reminderId: string; scheduledFor: string; status: 'delivered'; completedAt: string };
+export function buildReminderEventPayload(reminderId: string, scheduledFor: string, completedAt: string, clientEventId: string): ReminderEventPayload { return { clientEventId, reminderId, scheduledFor, status: 'delivered', completedAt }; }
+export function buildOutboxOperation(entityType: string, entityId: string, idempotencyKey: string, payload: unknown, createdAt: string) { return { id: idempotencyKey, entityType, operation: 'create', entityId, idempotencyKey, payloadJson: JSON.stringify(payload), nextAttemptAt: createdAt }; }

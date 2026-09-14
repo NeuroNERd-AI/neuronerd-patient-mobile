@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { LocalAdaptiveEngine } from '../src/domain/adaptive/fallback';
 import { OnDeviceMLAdaptiveEngine, buildAdaptiveFeatures } from '../src/domain/adaptive/onDeviceModel';
+import { adaptiveRecommendationRow } from '../src/domain/adaptive/records';
 const context = { gameKey: 'memory-match' as const, currentDifficulty: 'medium' as const, recentResults: [{ accuracy: 0.95, attempts: 1, durationMs: 20000, completed: true, difficulty: 'medium' as const }, { accuracy: 0.9, attempts: 1, durationMs: 21000, completed: true, difficulty: 'medium' as const }], consecutiveSuccesses: 2, consecutiveFailures: 0 };
 const distance = (a: string, b: string) => Math.abs(['easy', 'medium', 'hard'].indexOf(a) - ['easy', 'medium', 'hard'].indexOf(b));
 describe('adaptive engines', () => {
@@ -11,4 +12,5 @@ describe('adaptive engines', () => {
   it('falls back when confidence or history is insufficient', () => { const result = new OnDeviceMLAdaptiveEngine().recommendNextDifficulty({ ...context, recentResults: [] }); expect(result.engine).toBe('rules-fallback'); expect(result.fallbackReason).toContain('confidence'); });
   it('keeps deterministic fallback within one tier and explains the choice', () => { const result = new LocalAdaptiveEngine().recommendNextDifficulty(context); expect(result.engine).toBe('rules-fallback'); expect(distance(result.difficulty, 'medium')).toBeLessThanOrEqual(1); expect(result.rationale.length).toBeGreaterThan(10); });
   it('does not increase difficulty after repeated failures at the hard boundary', () => { const result = new LocalAdaptiveEngine().recommendNextDifficulty({ ...context, currentDifficulty: 'hard', recentResults: [{ accuracy: 0.2, attempts: 8, durationMs: 120000, completed: false, difficulty: 'hard' }], consecutiveSuccesses: 0, consecutiveFailures: 3 }); expect(result.difficulty).toBe('medium'); });
+  it('maps recommendation metadata to the adaptive_recommendations row contract', () => { const recommendation = new LocalAdaptiveEngine().recommendNextDifficulty(context); const row = adaptiveRecommendationRow('memory-match', 'medium', recommendation, '2026-09-14T00:00:00Z'); expect(row.id).toBe(recommendation.recommendationId); expect(row.engineVersion).toBe(recommendation.engineVersion); expect(row.featureSchemaVersion).toBe('adaptive-features-v1'); expect(row.recommendedDifficulty).toBe(recommendation.difficulty); });
 });

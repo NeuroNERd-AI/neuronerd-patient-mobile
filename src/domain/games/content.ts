@@ -1,0 +1,8 @@
+import type { Difficulty } from '../../types';
+
+export const familiarObjects = ['🍵', '🪔', '🌼', '🧺', '☂️', '🍋', '🎋', '🍚'];
+export type ObjectRecallRound = { shown: string[]; options: string[]; correct: string[] };
+export function objectRecallRound(round: number, difficulty: Difficulty): ObjectRecallRound { const count = difficulty === 'hard' ? 4 : difficulty === 'medium' ? 3 : 2; const start = (round * 2) % familiarObjects.length; const shown = Array.from({ length: count }, (_, index) => familiarObjects[(start + index) % familiarObjects.length]); const distractor = familiarObjects[(start + count + 1) % familiarObjects.length]; return { shown, correct: shown.slice(0, Math.max(1, count - 1)), options: [...shown.slice(0, Math.max(1, count - 1)), distractor].sort() }; }
+export type PatternQuestion = { sequence: string[]; options: string[]; answer: string; explanation: string };
+const symbols = ['🌼', '🌿', '🪷', '🍃'];
+export function patternQuestion(round: number, difficulty: Difficulty): PatternQuestion { const step = difficulty === 'hard' ? 2 : difficulty === 'medium' ? 1 : 1; const length = difficulty === 'hard' ? 5 : 4; const start = round % symbols.length; const sequence = Array.from({ length }, (_, index) => symbols[(start + index * step) % symbols.length]); const answer = symbols[(start + length * step) % symbols.length]; const options = [answer, symbols[(symbols.indexOf(answer) + 1) % symbols.length], symbols[(symbols.indexOf(answer) + 2) % symbols.length], symbols[(symbols.indexOf(answer) + 3) % symbols.length]]; return { sequence, answer, options, explanation: step === 2 ? 'The pattern moves two places each time.' : 'The pattern moves one place each time.' }; }

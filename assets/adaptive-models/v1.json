@@ -1,0 +1,9 @@
+{
+  "modelVersion": "logistic-v1.0.0",
+  "schemaVersion": "adaptive-features-v1",
+  "trainedFor": "next-session-completion-probability",
+  "bias": 0.15,
+  "weights": [1.35, 0.62, 0.4, 0.85, 1.1, 0.55, -0.9, -0.18, -0.72, 0.08],
+  "normalization": {"durationMs": {"min": 0, "max": 120000}, "attempts": {"min": 0, "max": 10}},
+  "notes": "Development baseline artifact. Non-clinical difficulty recommendation only. Replace with approved trained artifact before release."
+}

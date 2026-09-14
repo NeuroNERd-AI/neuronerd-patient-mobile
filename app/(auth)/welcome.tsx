@@ -1,0 +1,5 @@
+import { Link } from 'expo-router';
+import { SafeAreaView, Text, View } from 'react-native';
+import { Button, Card, Heading, OfflineBanner } from '../../src/components/ui';
+import { colors, spacing } from '../../src/theme/tokens';
+export default function Welcome() { return <SafeAreaView style={{ flex: 1, backgroundColor: colors.cream }}><View style={{ flex: 1, padding: spacing.lg, justifyContent: 'center', gap: spacing.xl }}><Heading subtitle="A gentle companion for everyday moments, games, and routines.">Welcome to NeuroNERd</Heading><Card><Text style={{ fontSize: 62, textAlign: 'center' }}>🌿</Text><Text style={{ fontSize: 20, fontWeight: '700', color: colors.ink, textAlign: 'center' }}>Your pace. Your place.</Text><Text style={{ color: colors.muted, textAlign: 'center', lineHeight: 24 }}>Activities are saved safely on your device, even when the internet takes a rest.</Text></Card><OfflineBanner /><Link href="/(auth)/login" asChild><Button title="Continue" /></Link></View></SafeAreaView>; }

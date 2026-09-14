@@ -1,0 +1,5 @@
+import { describe, expect, it } from 'vitest';
+import { LocalAdaptiveEngine } from '../src/domain/adaptive/fallback';
+import { OnDeviceMLAdaptiveEngine } from '../src/domain/adaptive/onDeviceModel';
+const context = { gameKey: 'memory-match' as const, currentDifficulty: 'medium' as const, recentResults: [{ accuracy: 0.95, attempts: 1, durationMs: 20000, completed: true, difficulty: 'medium' as const }, { accuracy: 0.9, attempts: 1, durationMs: 21000, completed: true, difficulty: 'medium' as const }], consecutiveSuccesses: 2, consecutiveFailures: 0 };
+describe('adaptive engines', () => { it('keeps fallback within a valid difficulty', () => { const result = new LocalAdaptiveEngine().recommendNextDifficulty(context); expect(['easy', 'medium', 'hard']).toContain(result.difficulty); expect(result.engine).toBe('rules-fallback'); }); it('runs the packaged model or safe fallback offline', () => { const result = new OnDeviceMLAdaptiveEngine().recommendNextDifficulty(context); expect(['on-device-ml', 'rules-fallback']).toContain(result.engine); expect(result.confidence).toBeGreaterThan(0); expect(result.featureSchemaVersion).toBe('adaptive-features-v1'); }); });

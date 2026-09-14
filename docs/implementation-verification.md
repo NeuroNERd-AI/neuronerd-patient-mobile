@@ -125,3 +125,7 @@ Create a development build and run the approved physical-device matrix using a d
 ## 15. Physical-device E2E validation status
 
 The complete PASS/FAIL/BLOCKED/NOT TESTED matrix is recorded in [`docs/e2e-validation.md`](./e2e-validation.md). The repository was prebuilt for Android locally, but the sandbox has no Android SDK, `adb`, emulator, Gradle installation, or connected physical device. Consequently, APK creation and every physical-device row remain **BLOCKED** or **NOT TESTED**. No physical-device result is claimed.
+
+## 16. Interaction and product polish milestone
+
+The interaction audit is recorded in [`docs/interaction-checklist.md`](./interaction-checklist.md). Home now reads local reminders and completed game results; Memory Match has a real shuffled card grid and matching feedback; Object Recall and Pattern Sequence retain their offline multi-round flows with clearer feedback; reminders support completion, undo, sync status, and local notification requests; Memories has a text-first save form; Profile preferences persist locally; and Help/About is a real route. These changes are locally typechecked/linted and covered by 15 automated tests. Device interaction, notification delivery, accessibility services, and locale rendering remain not physically tested.

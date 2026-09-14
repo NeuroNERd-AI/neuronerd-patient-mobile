@@ -1,0 +1,4 @@
+import { describe, expect, it } from 'vitest';
+import { themeFor } from '../src/theme/tokens';
+import { buildReminderEventPayload } from '../src/domain/sync/contracts';
+describe('patient interaction contracts', () => { it('provides distinct large-text and high-contrast modes', () => { expect(themeFor('large').scale).toBeGreaterThan(1); expect(themeFor('highContrast').colors.cream).toBe('#10130F'); expect(themeFor('highContrast').colors.border).toBe('#FFFFFF'); }); it('keeps reminder completion payload non-clinical and idempotent', () => { const payload = buildReminderEventPayload('reminder-1', '2026-09-15T08:00:00Z', '2026-09-15T08:01:00Z', 'event-1'); expect(payload.clientEventId).toBe('event-1'); expect(payload.status).toBe('delivered'); expect(Object.keys(payload)).not.toContain('score'); }); });
